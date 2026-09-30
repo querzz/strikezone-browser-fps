@@ -1,13 +1,59 @@
-# StrikeZone
+# Neon Strike Protocol
 
-Original single-player browser FPS prototype, not Counter-Strike. Includes bots, shooting, reload, simple wall collision and win/loss states. No multiplayer or Windows EXE included.
+Original single-player tactical browser FPS vertical slice built with Three.js. This project is not Counter-Strike and intentionally uses original naming, gameplay framing, and procedural/stylized visuals.
 
-## Run
-Install Node.js 22.12+ (or compatible current LTS). Download ZIP and extract, then double-click start.bat on Windows. Alternatively run npm install and npm run dev -- --open. Run npm run build for a static production build.
+## Setup
 
-Controls: WASD, mouse, left click to shoot, R reload, Shift faster movement, Escape pause. Click the button to resume or restart after win/loss.
+Requirements: Node.js 22+.
 
-## Online model
-A decorative RobotExpressive GLB loads from https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb . Internet required for this model only. It is not bundled in the repository. Model provenance/license: https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf/RobotExpressive . Respect the original asset license if redistributing. Bots, weapon view and arena do not use Counter-Strike assets. Bots use procedural capsules; no weapon model or animations yet. Failed model download does not prevent gameplay.
+```bash
+npm install
+npm run dev
+```
 
-Prototype not executed or browser-tested in the assistant environment.
+Windows quick start is preserved via `start.bat` (installs deps, then runs dev server).
+
+## Validation
+
+```bash
+npm run smoke
+```
+
+`smoke` runs a production build as a basic validation step.
+
+## Core features in this slice
+
+- Start menu with settings (mouse sensitivity + audio volume)
+- Pointer lock FPS controls with sprint, jump, gravity, collision, and pause flow
+- Procedural arena with lanes, cover, attacker/defender spawn zones, and collision-friendly navigation
+- Team round system (player + allied bots vs defender bots), round timer, score tracking, best-of-5 match resolution
+- Buy/loadout phase with credits and an in-game shop (`B`)
+- Pistol + rifle, rifle ADS, recoil/spread, reload, ammo reserve, tracers, muzzle flash, hit marker, kill feed, weapon switching (`1`/`2`)
+- Bot AI patrol + engagement behavior with line-of-sight checks and objective pressure
+- Objective mode: attackers must secure the zone while defenders delay/deny capture
+- Responsive HUD and restartable end-of-match flow
+
+## Controls
+
+- `WASD` move
+- `Shift` sprint
+- `Space` jump
+- `Mouse` look
+- `Left Click` fire
+- `Right Click` ADS (rifle)
+- `R` reload
+- `1` / `2` switch weapon
+- `B` open/close shop
+- `Esc` pause / release pointer lock
+
+## Assets and license notes
+
+- Core gameplay does not depend on remote models or downloaded copyrighted game assets.
+- Arena, bots, zone marker, and effects are procedural Three.js geometry/materials created in project code.
+- Audio uses generated WebAudio tones (no external sound files).
+
+## Known limitations
+
+- Single-player only (no networking, no server authority, no anti-cheat).
+- Bot behavior is intentionally lightweight for a compact vertical slice.
+- Build emits a bundle size warning due to Three.js footprint.

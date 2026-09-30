@@ -1,1 +1,76 @@
-<!doctype html><html lang="ru"><meta charset="utf-8"><title>StrikeZone</title><style>body{margin:0;overflow:hidden;background:#111;font:18px Arial;color:white}#hud{position:fixed;top:16px;left:16px}#aim{position:fixed;top:50%;left:50%}button{position:fixed;bottom:24px;left:24px;padding:16px;z-index:2}</style><div id="hud"></div><div id="aim">+</div><button id="start">Играть / продолжить</button><script type="module" src="/main.js"></script></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Neon Strike Protocol</title>
+  <style>
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    body{margin:0;overflow:hidden;background:#080b11;color:#dbe4ff;font:14px/1.35 Inter,Segoe UI,Arial,sans-serif}
+    #app{position:fixed;inset:0}
+    canvas{display:block}
+    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,14,.72);backdrop-filter:blur(3px);z-index:10}
+    .panel{width:min(560px,96vw);background:rgba(12,18,29,.92);border:1px solid #2a3958;border-radius:12px;padding:18px}
+    h1,h2{margin:0 0 10px;font-weight:700}
+    p{margin:6px 0;color:#aab9dd}
+    label{display:flex;justify-content:space-between;gap:12px;margin:10px 0;align-items:center}
+    input[type='range']{width:58%}
+    .buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    button{background:#2a6dfd;color:white;border:none;border-radius:8px;padding:10px 12px;font-weight:600;cursor:pointer}
+    button.secondary{background:#2a3958}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+    #crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 20px monospace;text-shadow:0 0 8px #9fbeff}
+    #stats{position:absolute;left:12px;top:10px;background:rgba(7,10,16,.55);border:1px solid #23304d;border-radius:8px;padding:8px 10px;white-space:pre-line}
+    #objective{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(7,10,16,.55);border:1px solid #23304d;border-radius:8px;padding:8px 10px;min-width:220px;text-align:center}
+    #killfeed{position:absolute;right:12px;top:10px;display:flex;flex-direction:column;gap:5px;max-width:min(44vw,380px)}
+    #killfeed span{padding:4px 7px;border-radius:6px;background:rgba(7,10,16,.75);border:1px solid #2a3958;text-align:right}
+    #shopHint{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);background:rgba(7,10,16,.7);padding:7px 11px;border-radius:7px;border:1px solid #2a3958}
+    #hit{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:38px;color:#fff;opacity:0;transition:opacity .08s}
+    .hidden{display:none}
+    @media (max-width:720px){#stats,#objective,#killfeed{font-size:12px}}
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="hud">
+    <div id="crosshair">+</div>
+    <div id="stats"></div>
+    <div id="objective"></div>
+    <div id="killfeed"></div>
+    <div id="shopHint" class="hidden">Buy phase: press B for loadout</div>
+    <div id="hit">✶</div>
+  </div>
+
+  <div id="menu" class="overlay">
+    <div class="panel">
+      <h1>Neon Strike Protocol</h1>
+      <p>Original single-player tactical FPS vertical slice with procedural visuals.</p>
+      <label>Sensitivity <input id="sens" type="range" min="0.1" max="2" step="0.05" value="0.8" /><span id="sensVal">0.80</span></label>
+      <label>Audio <input id="audio" type="range" min="0" max="1" step="0.05" value="0.7" /><span id="audioVal">70%</span></label>
+      <div class="buttons">
+        <button id="startBtn">Start Operation</button>
+        <button id="resumeBtn" class="secondary hidden">Resume</button>
+      </div>
+      <p>Controls: WASD move · Shift sprint · Space jump · 1/2 switch weapon · Left click fire · Right click ADS (rifle) · R reload · B shop · Esc pause.</p>
+    </div>
+  </div>
+
+  <div id="shop" class="overlay hidden">
+    <div class="panel">
+      <h2>Loadout Console</h2>
+      <p id="creditsLabel">Credits: 0</p>
+      <div class="buttons">
+        <button data-buy="pistol">Pistol (free refill)</button>
+        <button data-buy="rifle">Rifle (900)</button>
+      </div>
+      <div class="buttons">
+        <button id="closeShop" class="secondary">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
