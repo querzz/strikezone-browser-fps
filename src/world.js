@@ -1,106 +1,148 @@
 import * as T from 'three';
+import { isBlockedSphere } from './rules.js';
 
-function makeBox(scene, boxes, x, y, z, w, h, d, color) {
+function addBox(scene, boxes, meshes, x, y, z, w, h, d, color, emissive = 0x000000) {
   const mesh = new T.Mesh(
     new T.BoxGeometry(w, h, d),
-    new T.MeshStandardMaterial({ color, roughness: 0.8, metalness: 0.08 }),
+    new T.MeshStandardMaterial({ color, emissive, emissiveIntensity: emissive ? 0.15 : 0, roughness: 0.8, metalness: 0.2 }),
   );
   mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
   scene.add(mesh);
   boxes.push(new T.Box3().setFromObject(mesh));
+  meshes.push(mesh);
   return mesh;
 }
 
-export function createWorld(scene) {
+function addCylinder(scene, x, y, z, radius, height, color) {
+  const mesh = new T.Mesh(
+    new T.CylinderGeometry(radius, radius, height, 12),
+    new T.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.3 }),
+  );
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  scene.add(mesh);
+}
+
+export function createWorld(scene, renderer) {
   const colliders = [];
   const collidableMeshes = [];
 
-  scene.background = new T.Color(0x0a101a);
+  scene.background = new T.Color(0x080d15);
+  scene.fog = new T.Fog(0x080d15, 60, 140);
 
-  const hemi = new T.HemisphereLight(0xbfd7ff, 0x101114, 1.6);
-  const dir = new T.DirectionalLight(0xffffff, 1.1);
-  dir.position.set(8, 14, 4);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+
+  const hemi = new T.HemisphereLight(0xabc6ff, 0x101820, 1.2);
+  const dir = new T.DirectionalLight(0xddeaff, 1.25);
+  dir.position.set(15, 24, -6);
+  dir.castShadow = true;
+  dir.shadow.mapSize.set(1024, 1024);
+  dir.shadow.camera.left = -55;
+  dir.shadow.camera.right = 55;
+  dir.shadow.camera.top = 55;
+  dir.shadow.camera.bottom = -55;
   scene.add(hemi, dir);
 
   const floor = new T.Mesh(
-    new T.PlaneGeometry(110, 90),
-    new T.MeshStandardMaterial({ color: 0x172233, roughness: 0.9 }),
+    new T.PlaneGeometry(120, 98),
+    new T.MeshStandardMaterial({ color: 0x1a232e, roughness: 0.95, metalness: 0.05 }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
 
-  const laneTint = new T.MeshStandardMaterial({ color: 0x1f2f45, roughness: 1 });
-  const lane = new T.Mesh(new T.PlaneGeometry(96, 18), laneTint);
-  lane.rotation.x = -Math.PI / 2;
-  lane.position.y = 0.01;
-  scene.add(lane);
+  const mainLane = new T.Mesh(
+    new T.PlaneGeometry(100, 16),
+    new T.MeshStandardMaterial({ color: 0x202f43, roughness: 1 }),
+  );
+  mainLane.rotation.x = -Math.PI / 2;
+  mainLane.position.y = 0.01;
+  scene.add(mainLane);
 
-  const borderH = 4;
-  const wallColor = 0x324766;
+  // Outer walls
   for (const args of [
-    [0, borderH / 2, -42, 100, borderH, 2],
-    [0, borderH / 2, 42, 100, borderH, 2],
-    [-50, borderH / 2, 0, 2, borderH, 84],
-    [50, borderH / 2, 0, 2, borderH, 84],
-  ]) {
-    const m = makeBox(scene, colliders, ...args, wallColor);
-    collidableMeshes.push(m);
-  }
+    [0, 3.2, -46, 112, 6.4, 2],
+    [0, 3.2, 46, 112, 6.4, 2],
+    [-56, 3.2, 0, 2, 6.4, 92],
+    [56, 3.2, 0, 2, 6.4, 92],
+  ]) addBox(scene, colliders, collidableMeshes, ...args, 0x33445d);
 
-  const coverColor = 0x637ea3;
+  // Spawn protection alcoves and sightline blockers
   for (const args of [
-    [-24, 1.6, -22, 10, 3.2, 2],
-    [24, 1.6, -22, 10, 3.2, 2],
-    [-12, 1.6, -10, 8, 3.2, 2],
-    [12, 1.6, -10, 8, 3.2, 2],
-    [-20, 1.6, 5, 8, 3.2, 2],
-    [20, 1.6, 5, 8, 3.2, 2],
-    [-10, 1.6, 19, 7, 3.2, 2],
-    [10, 1.6, 19, 7, 3.2, 2],
-    [0, 1.6, 0, 8, 3.2, 8],
-    [-33, 2.4, -2, 3, 4.8, 10],
-    [33, 2.4, 2, 3, 4.8, 10],
-  ]) {
-    const m = makeBox(scene, colliders, ...args, coverColor);
-    collidableMeshes.push(m);
-  }
+    [-14, 2.5, -34, 2, 5, 14],
+    [14, 2.5, -34, 2, 5, 14],
+    [0, 2.2, -27, 20, 4.4, 2],
+    [-14, 2.5, 34, 2, 5, 14],
+    [14, 2.5, 34, 2, 5, 14],
+    [0, 2.2, 27, 20, 4.4, 2],
+  ]) addBox(scene, colliders, collidableMeshes, ...args, 0x405270);
+
+  // Central urban structures / corridors
+  for (const args of [
+    [-34, 5, 0, 12, 10, 18],
+    [34, 5, 0, 12, 10, 18],
+    [0, 4.5, 0, 14, 9, 12],
+    [-20, 3, -10, 8, 6, 10],
+    [20, 3, -10, 8, 6, 10],
+    [-20, 3, 11, 8, 6, 10],
+    [20, 3, 11, 8, 6, 10],
+  ]) addBox(scene, colliders, collidableMeshes, ...args, 0x2a3548);
+
+  // Cover pieces
+  for (const args of [
+    [-26, 1.5, -21, 10, 3, 2],
+    [26, 1.5, -21, 10, 3, 2],
+    [-13, 1.5, -7, 8, 3, 2],
+    [13, 1.5, -7, 8, 3, 2],
+    [-22, 1.5, 8, 9, 3, 2],
+    [22, 1.5, 8, 9, 3, 2],
+    [-10, 1.5, 22, 7, 3, 2],
+    [10, 1.5, 22, 7, 3, 2],
+  ]) addBox(scene, colliders, collidableMeshes, ...args, 0x667d99, 0x1f2b42);
+
+  // Industrial props
+  for (const prop of [
+    [-40, 1, -25, 1.1, 2],
+    [40, 1, -25, 1.1, 2],
+    [-40, 1, 25, 1.1, 2],
+    [40, 1, 25, 1.1, 2],
+    [-4, 1, -16, 0.9, 2.2],
+    [4, 1, 16, 0.9, 2.2],
+  ]) addCylinder(scene, ...prop, 0x7a8ca7);
 
   const objectiveCenter = new T.Vector3(0, 0, 24);
   const objectiveRadius = 6;
-
   const zone = new T.Mesh(
-    new T.CylinderGeometry(objectiveRadius, objectiveRadius, 0.2, 28),
-    new T.MeshStandardMaterial({ color: 0x295f4e, transparent: true, opacity: 0.4 }),
+    new T.CylinderGeometry(objectiveRadius, objectiveRadius, 0.18, 32),
+    new T.MeshStandardMaterial({ color: 0x2f6e56, transparent: true, opacity: 0.38, emissive: 0x1d3f34, emissiveIntensity: 0.55 }),
   );
   zone.position.copy(objectiveCenter);
   zone.position.y = 0.1;
+  zone.receiveShadow = true;
   scene.add(zone);
 
   const spawn = {
-    player: new T.Vector3(0, 1.7, -34),
-    allies: [new T.Vector3(-5, 1.7, -31), new T.Vector3(5, 1.7, -31)],
-    enemies: [new T.Vector3(-10, 1.7, 34), new T.Vector3(0, 1.7, 36), new T.Vector3(10, 1.7, 34)],
+    player: new T.Vector3(0, 1.7, -38),
+    allies: [new T.Vector3(-5, 1.7, -34), new T.Vector3(5, 1.7, -34)],
+    enemies: [new T.Vector3(-10, 1.7, 37), new T.Vector3(0, 1.7, 39), new T.Vector3(10, 1.7, 37)],
   };
 
   const patrol = {
-    attacker: [new T.Vector3(-20, 1.7, -14), new T.Vector3(0, 1.7, -4), new T.Vector3(19, 1.7, -12), objectiveCenter.clone()],
-    defender: [new T.Vector3(-18, 1.7, 14), new T.Vector3(18, 1.7, 14), new T.Vector3(0, 1.7, 28), objectiveCenter.clone()],
+    attacker: [
+      new T.Vector3(-24, 1.7, -15), new T.Vector3(-8, 1.7, -8), new T.Vector3(0, 1.7, -2), new T.Vector3(10, 1.7, -8), new T.Vector3(22, 1.7, -14), objectiveCenter.clone(),
+    ],
+    defender: [
+      new T.Vector3(-20, 1.7, 13), new T.Vector3(20, 1.7, 13), new T.Vector3(0, 1.7, 19), new T.Vector3(-8, 1.7, 28), new T.Vector3(8, 1.7, 28), objectiveCenter.clone(),
+    ],
   };
 
   const ray = new T.Raycaster();
 
   function collidesSphere(position, radius) {
-    for (const box of colliders) {
-      const px = Math.max(box.min.x, Math.min(position.x, box.max.x));
-      const py = Math.max(box.min.y, Math.min(position.y, box.max.y));
-      const pz = Math.max(box.min.z, Math.min(position.z, box.max.z));
-      const dx = position.x - px;
-      const dy = position.y - py;
-      const dz = position.z - pz;
-      if ((dx * dx) + (dy * dy) + (dz * dz) < (radius * radius)) return true;
-    }
-    return false;
+    return isBlockedSphere(colliders, position, radius);
   }
 
   function hasLineOfSight(a, b) {

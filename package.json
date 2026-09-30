@@ -1,1 +1,1 @@
-{"name":"neon-strike-protocol","version":"0.2.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build","smoke":"npm run build"},"dependencies":{"three":"0.180.0"},"devDependencies":{"vite":"7.1.7"}}
+{"name":"neon-strike-protocol","version":"0.3.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build","smoke":"npm run build","test":"node --test"},"dependencies":{"three":"0.180.0"},"devDependencies":{"vite":"7.1.7"}}

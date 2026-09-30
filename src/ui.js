@@ -8,13 +8,20 @@ export function createUI() {
   const sensVal = document.getElementById('sensVal');
   const audio = document.getElementById('audio');
   const audioVal = document.getElementById('audioVal');
+  const mute = document.getElementById('mute');
+  const difficulty = document.getElementById('difficulty');
   const stats = document.getElementById('stats');
   const objective = document.getElementById('objective');
   const killfeed = document.getElementById('killfeed');
   const creditsLabel = document.getElementById('creditsLabel');
   const crosshair = document.getElementById('crosshair');
   const hit = document.getElementById('hit');
+  const headshot = document.getElementById('headshot');
+  const damage = document.getElementById('damage');
+  const damageArrow = document.getElementById('damageArrow');
   const shopHint = document.getElementById('shopHint');
+  const scoreboard = document.getElementById('scoreboard');
+  const scoreboardText = document.getElementById('scoreboardText');
 
   function updateSettingsLabels() {
     sensVal.textContent = Number(sens.value).toFixed(2);
@@ -44,7 +51,7 @@ export function createUI() {
     shop.classList.add('hidden');
   }
 
-  function renderHud(lines, objectiveText, feed, showBuyHint) {
+  function renderHud(lines, objectiveText, feed, showBuyHint, scoreText, scoreboardOpen) {
     stats.textContent = lines;
     objective.textContent = objectiveText;
     killfeed.innerHTML = '';
@@ -54,11 +61,23 @@ export function createUI() {
       killfeed.appendChild(el);
     }
     shopHint.classList.toggle('hidden', !showBuyHint);
+    scoreboardText.textContent = scoreText;
+    scoreboard.style.display = scoreboardOpen ? 'block' : 'none';
   }
 
-  function pulseHitmarker() {
+  function pulseHitmarker(isHeadshot = false) {
     hit.style.opacity = '1';
-    setTimeout(() => { hit.style.opacity = '0'; }, 90);
+    setTimeout(() => { hit.style.opacity = '0'; }, 100);
+    if (isHeadshot) {
+      headshot.style.opacity = '1';
+      setTimeout(() => { headshot.style.opacity = '0'; }, 180);
+    }
+  }
+
+  function pulseDamage(angle) {
+    damage.style.opacity = '1';
+    damageArrow.style.transform = `rotate(${angle}rad)`;
+    setTimeout(() => { damage.style.opacity = '0'; }, 160);
   }
 
   return {
@@ -67,6 +86,8 @@ export function createUI() {
     closeShop,
     sens,
     audio,
+    mute,
+    difficulty,
     crosshair,
     showMenu,
     hideMenu,
@@ -74,5 +95,6 @@ export function createUI() {
     hideShop,
     renderHud,
     pulseHitmarker,
+    pulseDamage,
   };
 }
